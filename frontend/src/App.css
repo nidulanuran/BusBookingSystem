@@ -76,3 +76,129 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
 }
+
+/* --- 1. The Dark Background Overlay --- */
+.modal-overlay {
+  position: fixed; /* This makes it float on top of everything */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Dark semi-transparent background */
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center;     /* Center vertically */
+  z-index: 9999;           /* Ensure it sits on top of all other content */
+  backdrop-filter: blur(3px); /* Optional: blurs the background slightly */
+}
+
+/* --- 2. The White Popup Box --- */
+.modal-content {
+  background: white;
+  width: 500px;
+  max-width: 90%;
+  border-radius: 12px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.3); /* Drop shadow */
+  animation: popIn 0.3s ease-out; /* Smooth animation */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 3. Header Section --- */
+.modal-header {
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #888;
+}
+
+/* --- 4. Body (Inputs) Section --- */
+.modal-body {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two columns */
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.full-width {
+  grid-column: span 2; /* Make this field stretch across */
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.form-group input, .form-group select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.form-group input:read-only {
+  background-color: #e9ecef; /* Grey out read-only fields */
+  color: #6c757d;
+}
+
+/* --- 5. Footer (Buttons) Section --- */
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background-color: #fff;
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  background-color: #e2e6ea;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #495057;
+}
+
+.btn-confirm {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-confirm:hover {
+  background-color: #218838;
+}
