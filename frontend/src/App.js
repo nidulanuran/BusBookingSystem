@@ -4,6 +4,7 @@ import Register from './pages/Register'; // Import the new page
 import AdminDashboard from './pages/AdminDashboard';
 import PassengerDashboard from './pages/PassengerDashboard';
 import ConductorDashboard from './pages/ConductorDashboard';
+import './App.css'
 
 function App() {
   return (
