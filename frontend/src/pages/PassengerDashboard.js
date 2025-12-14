@@ -8,6 +8,10 @@ import BookingService from '../services/BookingService';
 const PassengerDashboard = () => {
     const [buses, setBuses] = useState([]);
     const currentUser = JSON.parse(localStorage.getItem("user")); // Get logged in user
+    const [activeTab, setActiveTab] = useState("dashboard");
+
+    const [dashboard, setDashboard] = useState([]);
+    const [myBookings, setMyBookings] = useState([]);
 
     // --- NEW: Modal State ---
     const [showModal, setShowModal] = useState(false);
@@ -15,8 +19,12 @@ const PassengerDashboard = () => {
     const [seatCount, setSeatCount] = useState(1); // Default to 1 seat
 
     useEffect(() => {
-        loadBuses();
-    }, []);
+        if(activeTab==='dashboard'){
+            loadBuses();
+        } else if(activeTab==='myBookings'){
+            BookingService.getMyBookings(currentUser.id).then(res => setMyBookings(res.data));
+        }
+    }, [activeTab]);
 
     const loadBuses = () => {
         BusService.getAllBuses().then(res => setBuses(res.data));
@@ -67,87 +75,143 @@ const PassengerDashboard = () => {
         <div>
             <Navbar role="Passenger" />
             <div className="container">
-                <h1>Find Your Journey</h1>
-                <BusFilter onFilterResults={handleFilter} />
 
-                <div className="card-grid">
-                    {buses.map(bus => (
-                        <BusCard
-                            key={bus.busId}
-                            bus={bus}
-                            role="PASSENGER"
-                            onBook={handleBookClick} // Calls the function to open modal
-                        />
-                    ))}
+
+                {/* --- TABS FOR DASHBOARD & MY BOOKINGS --- */}
+                <div style={styles.tabs}>
+                    <button style={activeTab === "dashboard" ? styles.activeTab : styles.tab} onClick={() => setActiveTab("dashboard")}>Dashboard</button>
+                    <button style={activeTab === "myBookings" ? styles.activeTab : styles.tab} onClick={() => setActiveTab("myBookings")}>My Bookings</button>
                 </div>
 
-                {/* --- 3. THE PROFESSIONAL MODAL UI --- */}
-                {showModal && selectedBus && (
-                    <div className="modal-overlay">
-                        <div className="modal-content">
+                {/* --- DASHBOARD TAB --- */}
+                {activeTab==="dashboard" && (
+                    <div>
+                        <h1>Find Your Journey</h1>
+                        <BusFilter onFilterResults={handleFilter} />
 
-                            {/* Header */}
-                            <div className="modal-header">
-                                <h3>Confirm Your Booking</h3>
-                                <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
-                            </div>
-
-                            {/* Body */}
-                            <div className="modal-body">
-
-                                {/* Row 1: Passenger & Route (Read Only) */}
-                                <div className="form-group">
-                                    <label>Passenger Name</label>
-                                    <input type="text" value={currentUser.userName} readOnly />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Bus Route</label>
-                                    <input type="text" value={`${selectedBus.departureLocation} - ${selectedBus.destination}`} readOnly />
-                                </div>
-
-                                {/* Row 2: Full Width Description/Info */}
-                                <div className="form-group full-width">
-                                    <label>Bus Description</label>
-                                    <input type="text" value={selectedBus.description || "Standard Service"} readOnly />
-                                </div>
-
-                                {/* Row 3: Seat Selection & Price (Price is just visual for now) */}
-                                <div className="form-group">
-                                    <label>Seats Required *</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max={selectedBus.seatCount}
-                                        value={seatCount}
-                                        onChange={(e) => setSeatCount(e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Payment Method</label>
-                                    <select>
-                                        <option>Cash on Board</option>
-                                        <option>Credit Card (Coming Soon)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {/* Footer */}
-                            <div className="modal-footer">
-                                <button className="btn-cancel" onClick={() => setShowModal(false)}>
-                                    Cancel
-                                </button>
-                                <button className="btn-confirm" onClick={submitBooking}>
-                                    Confirm Booking
-                                </button>
-                            </div>
+                        <div className="card-grid">
+                            {buses.map(bus => (
+                                <BusCard
+                                    key={bus.busId}
+                                    bus={bus}
+                                    role="PASSENGER"
+                                    onBook={handleBookClick} // Calls the function to open modal
+                                />
+                            ))}
                         </div>
+
+                        {/* --- 3. THE PROFESSIONAL MODAL UI --- */}
+                        {showModal && selectedBus && (
+                            <div className="modal-overlay">
+                                <div className="modal-content">
+
+                                    {/* Header */}
+                                    <div className="modal-header">
+                                        <h3>Confirm Your Booking</h3>
+                                        <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
+                                    </div>
+
+                                    {/* Body */}
+                                    <div className="modal-body">
+
+                                        {/* Row 1: Passenger & Route (Read Only) */}
+                                        <div className="form-group">
+                                            <label>Passenger Name</label>
+                                            <input type="text" value={currentUser.userName} readOnly />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Bus Route</label>
+                                            <input type="text" value={`${selectedBus.departureLocation} - ${selectedBus.destination}`} readOnly />
+                                        </div>
+
+                                        {/* Row 2: Full Width Description/Info */}
+                                        <div className="form-group full-width">
+                                            <label>Bus Description</label>
+                                            <input type="text" value={selectedBus.description || "Standard Service"} readOnly />
+                                        </div>
+
+                                        {/* Row 3: Seat Selection & Price (Price is just visual for now) */}
+                                        <div className="form-group">
+                                            <label>Seats Required *</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max={selectedBus.seatCount}
+                                                value={seatCount}
+                                                onChange={(e) => setSeatCount(e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Payment Method</label>
+                                            <select>
+                                                <option>Cash on Board</option>
+                                                <option>Credit Card (Coming Soon)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer */}
+                                    <div className="modal-footer">
+                                        <button className="btn-cancel" onClick={() => setShowModal(false)}>
+                                            Cancel
+                                        </button>
+                                        <button className="btn-confirm" onClick={submitBooking}>
+                                            Confirm Booking
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* --- MY BOOKINGS TAB --- */}
+                {activeTab==="myBookings" && (
+                    <div>
+                        <h1>My Bookings</h1>
+                        {myBookings.length === 0 ? (
+                            <p>You have no bookings yet.</p>
+                        ) : (
+                            <div className="card-grid">
+                                {myBookings.map(booking => (
+                                    <div key={booking.bookingId} className="booking-card">
+                                        <h3>Booking ID: {booking.bookingId}</h3>
+                                        <p>Bus: {booking.bus.departureLocation} to {booking.bus.destination}</p>
+                                        <p>Seats Booked: {booking.noOfSeatsWants}</p>
+                                        <p>Booking Date: {new Date(booking.bookingDate).toLocaleDateString()}</p>
+                                        <button className="btn-cancel-booking" onClick={() => {
+                                            BookingService.cancelBooking(booking.bookingId)
+                                                .then(() => {
+                                                    alert("Booking Cancelled");
+                                                    // Refresh bookings
+                                                    BookingService.getMyBookings(currentUser.id).then(res => setMyBookings(res.data));
+                                                })
+                                                .catch(err => {
+                                                    console.error(err);
+                                                    alert("Cancellation Failed");
+                                                });
+                                        }}>
+                                            Cancel Booking
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
         </div>
     );
 };
+
+const styles = {
+    tabs: { display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ddd', paddingBottom: '10px' },
+    tab: { padding: '10px 20px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1rem', color: '#666' },
+    activeTab: { padding: '10px 20px', border: 'none', background: '#007bff', color: 'white', borderRadius: '5px', cursor: 'pointer', fontSize: '1rem' },
+
+}
+
 
 export default PassengerDashboard;
