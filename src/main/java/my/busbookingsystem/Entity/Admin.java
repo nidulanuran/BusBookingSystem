@@ -3,6 +3,7 @@ package my.busbookingsystem.Entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
 @Entity
@@ -32,12 +33,15 @@ public class Admin {
     //-----------------------------Relationships--------------------------------------
 
     @OneToMany(mappedBy = "admin")
+    @JsonIgnore
     private List<Conductor> conductors;
 
     @OneToMany(mappedBy = "admin")
+    @JsonIgnore
     private List<Passenger> passengers;
 
     @OneToMany(mappedBy = "admin")
+    @JsonIgnore
     private List<Bus> buses;
 
     //-----------------------------Constructor--------------------------------------

@@ -2,6 +2,7 @@ package my.busbookingsystem.Entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class Passenger {
 
     @ManyToOne
     @JoinColumn(name = "admin_id")
+    @JsonIgnore
     private Admin admin;
 
     @ManyToOne
@@ -40,6 +42,7 @@ public class Passenger {
     private Bus bus;
 
     @OneToMany(mappedBy = "passenger")
+    @JsonIgnore
     private List<Booking> bookings;
 
     // --- Constructors ---

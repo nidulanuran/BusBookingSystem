@@ -3,6 +3,7 @@ package my.busbookingsystem.Entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class Bus {
@@ -33,6 +34,7 @@ public class Bus {
     //-----------------------------Relationships--------------------------------------
     @ManyToOne
     @JoinColumn(name = "adminId")
+    @JsonIgnore
     private Admin admin;
 
     @OneToOne
@@ -40,9 +42,11 @@ public class Bus {
     private Conductor conductor;
 
     @OneToMany(mappedBy = "bus")
+    @JsonIgnore
     private List<Booking> bookings;
 
     @OneToMany(mappedBy = "bus")
+    @JsonIgnore
     private List<Passenger> passengers;
 
     // --- Constructors ---
