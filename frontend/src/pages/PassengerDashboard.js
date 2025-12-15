@@ -22,7 +22,7 @@ const PassengerDashboard = () => {
         if(activeTab==='dashboard'){
             loadBuses();
         } else if(activeTab==='myBookings'){
-            BookingService.getMyBookings(currentUser.id).then(res => setMyBookings(res.data));
+            BookingService.getMyBookings(currentUser.passengerId).then(res => setMyBookings(res.data));
         }
     }, [activeTab]);
 
@@ -52,6 +52,10 @@ const PassengerDashboard = () => {
             return;
         }
 
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000; // Offset in milliseconds
+        const localISOTime = (new Date(now - offset)).toISOString().slice(0, 19);
+
         const bookingData = {
             noOfSeatsWants: seatCount,
             location: "Online",     // You can add an input for this too if you want
@@ -60,10 +64,15 @@ const PassengerDashboard = () => {
         };
 
         // Send IDs (Bus ID + Passenger ID) to Backend
-        BookingService.createBooking(bookingData, selectedBus.busId, currentUser.id)
+        BookingService.createBooking(bookingData, selectedBus.busId, currentUser.passengerId)
             .then(() => {
                 alert("Booking Successful!");
                 setShowModal(false); // Close popup
+
+                // Optional: Refresh bookings immediately
+                if (activeTab === 'myBookings') {
+                    BookingService.getMyBookings(currentUser.passengerId).then(res => setMyBookings(res.data));
+                }
             })
             .catch(err => {
                 console.error(err);

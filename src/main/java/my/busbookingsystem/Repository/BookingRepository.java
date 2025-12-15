@@ -12,4 +12,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     // 2. Get all bookings for a specific bus (for conductor/admin view)
     List<Booking> findByBus_BusId(Long busId);
+
+
 }
