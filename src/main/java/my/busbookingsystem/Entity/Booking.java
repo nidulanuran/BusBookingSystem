@@ -3,7 +3,8 @@ package my.busbookingsystem.Entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 
 @Entity
 public class Booking {
@@ -13,7 +14,8 @@ public class Booking {
     private Long bookingId;
 
     @Column(nullable = false)
-    @Size(min = 1, max = 6)
+    @Min(value = 1, message = "Must book at least 1 seat")
+    @Max(value = 6, message = "Cannot book more than 6 seats")
     private int noOfSeatsWants;
 
     @Column(nullable = false)
