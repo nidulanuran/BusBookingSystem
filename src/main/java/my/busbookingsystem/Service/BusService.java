@@ -1,7 +1,9 @@
 package my.busbookingsystem.Service;
 
 import my.busbookingsystem.Entity.Bus;
+import my.busbookingsystem.Entity.Conductor;
 import my.busbookingsystem.Repository.BusRepository;
+import my.busbookingsystem.Repository.ConductorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,9 @@ public class BusService {
 
     @Autowired
     private BusRepository busRepository;
+
+    @Autowired
+    private ConductorRepository conductorRepository;
 
     // --- Admin: Create / Update Bus ---
     public Bus saveBus(Bus bus) {
@@ -37,11 +42,48 @@ public class BusService {
     }
 
     // --- Admin & Passenger: Filter Buses (The 4 Dropdowns) ---
-    public List<Bus> filterBuses(String depLoc, String dest, LocalDateTime depTime, LocalDateTime destTime) {
+    public List<Bus> filterBuses(String depLoc, String dest) {
         // This relies on the Repository method we created earlier
-        return busRepository.findByDepartureLocationAndDestinationAndDepartureTimeAndDestinationTime(
-                depLoc, dest, depTime, destTime
+        return busRepository.findByDepartureLocationAndDestination(
+                depLoc, dest
         );
+    }
+
+    // Update logic for Admin dashboard
+    public Bus updateBus(Long id, Bus updatedBus) {
+        return busRepository.findById(id).map(bus -> {
+            bus.setDepartureLocation(updatedBus.getDepartureLocation());
+            bus.setDestination(updatedBus.getDestination());
+            bus.setDepartureTime(updatedBus.getDepartureTime());
+            bus.setDestinationTime(updatedBus.getDestinationTime());
+            bus.setSeatCount(updatedBus.getSeatCount());
+            bus.setDescription(updatedBus.getDescription());
+            return busRepository.save(bus);
+        }).orElse(null);
+    }
+
+    // NEW: Assign Conductor
+    public Bus assignConductor(Long busId, Long conductorId) {
+        Bus bus = busRepository.findById(busId).orElseThrow(() -> new RuntimeException("Bus not found"));
+        Conductor conductor = conductorRepository.findById(conductorId).orElseThrow(() -> new RuntimeException("Conductor not found"));
+
+        // Check if conductor is already assigned elsewhere (Double check)
+        // Ideally, the frontend filters this, but backend safety is good.
+
+        bus.setConductor(conductor);
+        return busRepository.save(bus);
+    }
+
+    // NEW: Unassign Conductor
+    public Bus unassignConductor(Long busId) {
+        Bus bus = busRepository.findById(busId).orElseThrow(() -> new RuntimeException("Bus not found"));
+        bus.setConductor(null);
+        return busRepository.save(bus);
+    }
+
+    // NEW: Get Available Conductors
+    public List<Conductor> getAvailableConductors() {
+        return conductorRepository.findAvailableConductors();
     }
 
 

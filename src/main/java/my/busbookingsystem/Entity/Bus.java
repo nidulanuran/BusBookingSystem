@@ -1,7 +1,7 @@
 package my.busbookingsystem.Entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -26,10 +26,10 @@ public class Bus {
     private String destination;
 
     @Column(nullable = false)
-    private LocalDateTime departureTime;
+    private LocalTime departureTime;
 
     @Column(nullable = false)
-    private LocalDateTime destinationTime;
+    private LocalTime destinationTime;
 
     //-----------------------------Relationships--------------------------------------
     @ManyToOne
@@ -95,19 +95,19 @@ public class Bus {
         this.destination = destination;
     }
 
-    public LocalDateTime getDepartureTime() {
+    public LocalTime getDepartureTime() {
         return departureTime;
     }
 
-    public void setDepartureTime(LocalDateTime departureTime) {
+    public void setDepartureTime(LocalTime departureTime) {
         this.departureTime = departureTime;
     }
 
-    public LocalDateTime getDestinationTime() {
+    public LocalTime getDestinationTime() {
         return destinationTime;
     }
 
-    public void setDestinationTime(LocalDateTime destinationTime) {
+    public void setDestinationTime(LocalTime destinationTime) {
         this.destinationTime = destinationTime;
     }
 

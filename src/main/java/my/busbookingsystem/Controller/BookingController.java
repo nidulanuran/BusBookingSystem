@@ -19,19 +19,21 @@ public class BookingController {
     // --- 1. Create Booking (Passenger Actions) ---
     // URL: /api/bookings/create?busId=1&passengerId=5
     @PostMapping("/create")
-    public ResponseEntity<Booking> createBooking(
+    public ResponseEntity<?> createBooking(
             @RequestBody Booking booking,
             @RequestParam Long busId,
             @RequestParam Long passengerId) {
 
-        Booking newBooking = bookingService.createBooking(booking, busId, passengerId);
-
-        if (newBooking != null) {
+        try {
+            Booking newBooking = bookingService.createBooking(booking, busId, passengerId);
             return ResponseEntity.ok(newBooking);
-        } else {
-            return ResponseEntity.badRequest().build(); // Bus or Passenger not found
+        } catch (RuntimeException e) {
+            // Return 400 Bad Request with the error message (e.g., "Already has active booking")
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+
 
     // --- 2. View My Bookings (Passenger History) ---
     @GetMapping("/passenger/{passengerId}")
