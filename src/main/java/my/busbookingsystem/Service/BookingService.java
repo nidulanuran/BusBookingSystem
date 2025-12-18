@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Service
 public class BookingService {
@@ -29,6 +31,10 @@ public class BookingService {
     // We take the booking object, plus the IDs of the Bus and Passenger to link them
     public Booking createBooking(Booking booking, Long busId, Long passengerId) {
 
+        if (hasActiveBooking(passengerId)){
+            throw new RuntimeException("Passenger already has an active booking.please complete or cancel booking.");
+        }
+
         // Find the specific Bus and Passenger from the database
         Optional<Bus> busOpt = busRepository.findById(busId);
         Optional<Passenger> passengerOpt = passengerRepository.findById(passengerId);
@@ -39,15 +45,40 @@ public class BookingService {
             // Link them together
             newBooking.setBus(busOpt.get());
             newBooking.setPassenger(passengerOpt.get());
+            newBooking.setBookingTimestamp(LocalDateTime.now());
 
             // Automatically set the "Request Made" time to right now
             newBooking.setRequestmadeDate(LocalDateTime.now());
             newBooking.setRequestmadeTime(LocalDateTime.now());
 
+            // Validate Travel Date (Cannot be in the past)
+            if (newBooking.getTravelDate().isBefore(LocalDate.now())) {
+                throw new RuntimeException("Cannot book for a past date.");
+            }
+
             return bookingRepository.save(newBooking);
         }
 
         return null; // Return null if bus or passenger ID is invalid
+    }
+
+    // --- Helper: Check for Active Booking ---
+    // Active means: Travel Date is in future OR (Travel Date is Today AND Destination Time hasn't passed)
+    private boolean hasActiveBooking(Long passengerId) {
+        List<Booking> allBookings = bookingRepository.findByPassenger_PassengerId(passengerId);
+
+        for (Booking b : allBookings) {
+            LocalDate today = LocalDate.now();
+            LocalTime now = LocalTime.now();
+
+            boolean isFutureDate = b.getTravelDate().isAfter(today);
+            boolean isTodayAndNotExpired = b.getTravelDate().isEqual(today) && b.getBus().getDestinationTime().isAfter(now);
+
+            if (isFutureDate || isTodayAndNotExpired) {
+                return true; // Found an active booking
+            }
+        }
+        return false;
     }
 
     // --- 2. Passenger: View My Own Bookings ---

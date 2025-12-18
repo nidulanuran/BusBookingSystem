@@ -3,6 +3,7 @@ package my.busbookingsystem.Entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 
@@ -22,10 +23,10 @@ public class Booking {
     private String location;
 
     @Column(nullable = false)
-    private LocalDateTime bookingDate;
+    private LocalDate travelDate;
 
     @Column(nullable = false)
-    private LocalDateTime bookingTime;
+    private LocalDateTime bookingTimestamp;
 
     private LocalDateTime requestmadeDate;
     private LocalDateTime requestmadeTime;
@@ -69,17 +70,17 @@ public class Booking {
 
     }
 
-    public LocalDateTime getBookingDate() {
-        return bookingDate;
+    public LocalDate getTravelDate() {
+        return travelDate;
     }
-    public void setBookingDate(LocalDateTime bookingDate) {
-        this.bookingDate = bookingDate;
+    public void setTravelDate(LocalDate travelDate) {
+        this.travelDate = travelDate;
     }
-    public LocalDateTime getBookingTime() {
-        return bookingTime;
+    public LocalDateTime getBookingTimestamp() {
+        return bookingTimestamp;
     }
-    public void setBookingTime(LocalDateTime bookingTime) {
-        this.bookingTime = bookingTime;
+    public void setBookingTimestamp(LocalDateTime bookingTimestamp) {
+        this.bookingTimestamp = bookingTimestamp;
     }
     public LocalDateTime getRequestmadeDate() {
         return requestmadeDate;
@@ -105,7 +106,5 @@ public class Booking {
     public void setBus(Bus bus) {
         this.bus = bus;
     }
-
-
 
 }

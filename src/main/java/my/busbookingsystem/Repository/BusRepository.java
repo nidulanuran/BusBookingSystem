@@ -9,11 +9,9 @@ import java.util.List;
 
 @Repository
 public interface BusRepository extends JpaRepository<Bus, Long> {
-    List<Bus> findByDepartureLocationAndDestinationAndDepartureTimeAndDestinationTime(
+    List<Bus> findByDepartureLocationAndDestination(
             String departureLocation,
-            String destination,
-            LocalDateTime departureTime,
-            LocalDateTime destinationTime
+            String destination
     );
 
 
