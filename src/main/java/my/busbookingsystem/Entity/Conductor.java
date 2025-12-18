@@ -3,6 +3,7 @@ package my.busbookingsystem.Entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 
 @Entity
@@ -34,7 +35,7 @@ public class Conductor {
     private Admin admin;
 
     @OneToOne(mappedBy = "conductor")
-    @JsonIgnore
+    @JsonIgnoreProperties("conductor")
     private Bus bus;
 
     // --- Constructors ---

@@ -4,14 +4,20 @@ import ConductorService from '../services/ConductorService';
 
 const ConductorDashboard = () => {
     const [bookings, setBookings] = useState([]);
-    const currentUser = JSON.parse(localStorage.getItem("user")); // Assumes user has conductorId
+
+    // 1. Get the logged-in user
+    const currentUser = JSON.parse(localStorage.getItem("user"));
 
     useEffect(() => {
-        // Fetch bookings for this conductor's bus
-        ConductorService.getAssignedBusBookings(currentUser.id)
-            .then(res => setBookings(res.data))
-            .catch(err => console.error(err));
-    }, []);
+        // FIX: Check if currentUser exists and use .conductorId instead of .id
+        if (currentUser && currentUser.conductorId) {
+            ConductorService.getAssignedBusBookings(currentUser.conductorId)
+                .then(res => setBookings(res.data))
+                .catch(err => console.error("Error fetching bookings:", err));
+        } else {
+            console.error("No conductor ID found. User might not be logged in properly.");
+        }
+    }, [currentUser]); // Added dependency
 
     return (
         <div>
@@ -28,11 +34,11 @@ const ConductorDashboard = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {bookings.length === 0 ? <tr><td colSpan="4" style={{padding:'20px'}}>No bookings yet.</td></tr> : null}
+                    {bookings.length === 0 ? <tr><td colSpan="4" style={{padding:'20px'}}>No bookings yet or no bus assigned.</td></tr> : null}
                     {bookings.map(b => (
                         <tr key={b.bookingId} style={{ borderBottom: '1px solid #ddd' }}>
-                            <td style={{ padding: '12px' }}>{b.passenger.userName}</td>
-                            <td>{b.passenger.phoneNo}</td>
+                            <td style={{ padding: '12px' }}>{b.passenger ? b.passenger.userName : "Unknown"}</td>
+                            <td>{b.passenger ? b.passenger.phoneNo : "N/A"}</td>
                             <td>{b.noOfSeatsWants}</td>
                             <td>{b.location}</td>
                         </tr>
