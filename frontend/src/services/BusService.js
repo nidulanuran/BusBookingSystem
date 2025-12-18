@@ -26,16 +26,28 @@ class BusService {
 
     // --- 5. Filter Buses (The 4 Dropdowns) ---
     // Note: React params must match Java @RequestParam names exactly
-    filterBuses(departureLocation, destination, departureTime, destinationTime) {
+    filterBuses(departureLocation, destination) {
         return axios.get(`${API_URL}/filter`, {
             params: {
                 departureLocation: departureLocation,
                 destination: destination,
-                departureTime: departureTime,     // Format: "YYYY-MM-DDTHH:mm:ss"
-                destinationTime: destinationTime  // Format: "YYYY-MM-DDTHH:mm:ss"
+
             }
         });
     }
+
+    getAvailableConductors() {
+        return axios.get(`${API_URL}/available-conductors`);
+    }
+
+    assignConductor(busId, conductorId) {
+        return axios.put(`${API_URL}/${busId}/assign-conductor/${conductorId}`);
+    }
+
+    unassignConductor(busId) {
+        return axios.put(`${API_URL}/${busId}/unassign-conductor`);
+    }
+
 }
 
 export default new BusService();

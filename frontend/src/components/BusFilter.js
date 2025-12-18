@@ -1,25 +1,21 @@
 import React, { useState } from 'react';
 import BusService from '../services/BusService';
-import './BusFilter.css'; // Import the CSS we just wrote
+import './BusFilter.css';
 
 const BusFilter = ({ onFilterResults }) => {
 
-    // State for the 4 filter fields
+    // Only Location and Destination are needed for filtering routes
     const [depLocation, setDepLocation] = useState('');
     const [destination, setDestination] = useState('');
-    const [depTime, setDepTime] = useState('');
-    const [destTime, setDestTime] = useState('');
 
-    // Hardcoded list of locations (You could also fetch this from DB)
+    // Hardcoded list of locations
     const locations = ["Colombo", "Kandy", "Galle", "Matara", "Jaffna", "Trincomalee", "Kurunegala", "Anuradhapura"];
 
     const handleSearch = async (e) => {
         e.preventDefault();
         try {
-            // Call the Service we wrote earlier
-            const response = await BusService.filterBuses(depLocation, destination, depTime, destTime);
-
-            // Send the results BACK to the Parent Dashboard (Admin or Passenger)
+            // Call the Service with only 2 arguments
+            const response = await BusService.filterBuses(depLocation, destination);
             onFilterResults(response.data);
         } catch (error) {
             console.error("Error filtering buses:", error);
@@ -62,31 +58,7 @@ const BusFilter = ({ onFilterResults }) => {
                 </select>
             </div>
 
-            {/* 3. Departure Time Picker (Calendar Dropdown) */}
-            <div className="input-group">
-                <label>Departure Date & Time</label>
-                <input
-                    type="datetime-local"
-                    className="form-input"
-                    value={depTime}
-                    onChange={(e) => setDepTime(e.target.value)}
-                    required
-                />
-            </div>
-
-            {/* 4. Destination Time Picker (Calendar Dropdown) */}
-            <div className="input-group">
-                <label>Arrival Date & Time</label>
-                <input
-                    type="datetime-local"
-                    className="form-input"
-                    value={destTime}
-                    onChange={(e) => setDestTime(e.target.value)}
-                    required
-                />
-            </div>
-
-            <button type="submit" className="search-btn">Find Buses</button>
+            <button type="submit" className="search-btn">Find Routes</button>
         </form>
     );
 };

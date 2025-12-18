@@ -1,4 +1,3 @@
-// src/pages/AdminDashboard.js
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import BusCard from '../components/BusCard';
@@ -9,15 +8,15 @@ import ConductorService from '../services/ConductorService';
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('buses');
 
-    // Separate states for data to avoid conflicts
     const [buses, setBuses] = useState([]);
     const [passengers, setPassengers] = useState([]);
     const [conductors, setConductors] = useState([]);
 
-    // Form State for Bus (Create/Edit)
     const [showBusForm, setShowBusForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentBusId, setCurrentBusId] = useState(null);
+
+    // Updated Form Data: time fields start as empty strings
     const [busFormData, setBusFormData] = useState({
         departureLocation: '',
         destination: '',
@@ -31,12 +30,10 @@ const AdminDashboard = () => {
     const [conductorFormData, setConductorFormData] = useState({
         userName: '',
         password: '',
-        phoneNo: '', // Make sure this matches your Entity (phoneNO vs phoneNo)
+        phoneNo: '',
         address: ''
     });
 
-
-    // --- Load Data Based on Tab ---
     useEffect(() => {
         if (activeTab === 'buses') loadBuses();
         if (activeTab === 'passengers') loadPassengers();
@@ -47,7 +44,6 @@ const AdminDashboard = () => {
     const loadPassengers = () => PassengerService.getAllPassengers().then(res => setPassengers(res.data));
     const loadConductors = () => ConductorService.getAllConductors().then(res => setConductors(res.data));
 
-    // --- Bus Form Handling ---
     const handleBusInputChange = (e) => {
         setBusFormData({ ...busFormData, [e.target.name]: e.target.value });
     };
@@ -56,7 +52,7 @@ const AdminDashboard = () => {
         setBusFormData({
             departureLocation: bus.departureLocation,
             destination: bus.destination,
-            departureTime: bus.departureTime,
+            departureTime: bus.departureTime, // Expecting "HH:mm:ss"
             destinationTime: bus.destinationTime,
             seatCount: bus.seatCount,
             description: bus.description
@@ -68,20 +64,18 @@ const AdminDashboard = () => {
 
     const handleCreateOrUpdateBus = (e) => {
         e.preventDefault();
+        const apiCall = isEditing
+            ? BusService.updateBus(currentBusId, busFormData)
+            : BusService.createBus(busFormData);
 
-        if (isEditing) {
-            BusService.updateBus(currentBusId, busFormData).then(() => {
-                alert("Bus Updated!");
-                resetBusForm();
-                loadBuses();
-            });
-        } else {
-            BusService.createBus(busFormData).then(() => {
-                alert("Bus Created!");
-                resetBusForm();
-                loadBuses();
-            });
-        }
+        apiCall.then(() => {
+            alert(isEditing ? "Bus Updated!" : "Bus Created!");
+            resetBusForm();
+            loadBuses();
+        }).catch(err => {
+            console.error(err);
+            alert("Operation Failed. Check console for details.");
+        });
     };
 
     const handleDeleteBus = (id) => {
@@ -96,7 +90,7 @@ const AdminDashboard = () => {
             alert("Conductor Hired Successfully!");
             setShowConductorForm(false);
             setConductorFormData({ userName: '', password: '', phoneNo: '', address: '' });
-            loadConductors(); // Refresh the list
+            loadConductors();
         }).catch(err => alert("Error adding conductor"));
     };
 
@@ -109,35 +103,40 @@ const AdminDashboard = () => {
         });
     };
 
-    // --- Render Helpers ---
     return (
         <div style={{ backgroundColor: '#f4f7f6', minHeight: '100vh' }}>
             <Navbar role="Admin" />
             <div className="container" style={{ padding: '20px' }}>
 
-                {/* Tab Navigation */}
                 <div style={styles.tabs}>
                     <button style={activeTab === 'buses' ? styles.activeTab : styles.tab} onClick={() => setActiveTab('buses')}>Manage Buses</button>
                     <button style={activeTab === 'passengers' ? styles.activeTab : styles.tab} onClick={() => setActiveTab('passengers')}>Manage Passengers</button>
                     <button style={activeTab === 'conductors' ? styles.activeTab : styles.tab} onClick={() => setActiveTab('conductors')}>Manage Conductors</button>
                 </div>
 
-                {/* --- BUS MANAGEMENT TAB --- */}
                 {activeTab === 'buses' && (
                     <div>
                         <button onClick={() => setShowBusForm(!showBusForm)} style={styles.addButton}>
                             {showBusForm ? "Close Form" : "+ Add New Bus"}
                         </button>
 
-                        {/* Bus Form (Hidden/Shown) */}
                         {showBusForm && (
                             <form onSubmit={handleCreateOrUpdateBus} style={styles.formContainer}>
                                 <h3>{isEditing ? "Edit Bus" : "Create New Bus"}</h3>
                                 <div style={styles.gridForm}>
                                     <input name="departureLocation" placeholder="From (Location)" value={busFormData.departureLocation} onChange={handleBusInputChange} style={styles.input} required />
                                     <input name="destination" placeholder="To (Destination)" value={busFormData.destination} onChange={handleBusInputChange} style={styles.input} required />
-                                    <input name="departureTime" type="datetime-local" value={busFormData.departureTime} onChange={handleBusInputChange} style={styles.input} required />
-                                    <input name="destinationTime" type="datetime-local" value={busFormData.destinationTime} onChange={handleBusInputChange} style={styles.input} required />
+
+                                    {/* UPDATED: Uses type="time" for Daily Schedules */}
+                                    <div style={{display:'flex', flexDirection:'column'}}>
+                                        <label style={{fontSize:'0.8rem'}}>Departure Time</label>
+                                        <input name="departureTime" type="time" value={busFormData.departureTime} onChange={handleBusInputChange} style={styles.input} required />
+                                    </div>
+                                    <div style={{display:'flex', flexDirection:'column'}}>
+                                        <label style={{fontSize:'0.8rem'}}>Arrival Time</label>
+                                        <input name="destinationTime" type="time" value={busFormData.destinationTime} onChange={handleBusInputChange} style={styles.input} required />
+                                    </div>
+
                                     <input name="seatCount" type="number" placeholder="Seats" value={busFormData.seatCount} onChange={handleBusInputChange} style={styles.input} required />
                                     <input name="description" placeholder="Description" value={busFormData.description} onChange={handleBusInputChange} style={styles.input} />
                                 </div>
@@ -145,7 +144,6 @@ const AdminDashboard = () => {
                             </form>
                         )}
 
-                        {/* Bus List using BusCard */}
                         <div style={styles.cardGrid}>
                             {buses.length === 0 && <p>No buses found. Add one!</p>}
                             {buses.map(bus => (
@@ -155,13 +153,13 @@ const AdminDashboard = () => {
                                     role="ADMIN"
                                     onDelete={handleDeleteBus}
                                     onEdit={handleEditBus}
+                                    refreshData={loadBuses}
                                 />
                             ))}
                         </div>
                     </div>
                 )}
 
-                {/* --- PASSENGER MANAGEMENT TAB --- */}
                 {activeTab === 'passengers' && (
                     <div style={styles.tableContainer}>
                         <table style={styles.table}>
@@ -187,49 +185,25 @@ const AdminDashboard = () => {
                     </div>
                 )}
 
-                {/* --- CONDUCTOR MANAGEMENT TAB --- */}
                 {activeTab === 'conductors' && (
                     <div>
-                        {/* The "Hire" Button */}
                         <button onClick={() => setShowConductorForm(!showConductorForm)} style={styles.addButton}>
                             {showConductorForm ? "Close Form" : "+ Hire New Conductor"}
                         </button>
 
-                        {/* The Form */}
                         {showConductorForm && (
                             <form onSubmit={handleCreateConductor} style={styles.formContainer}>
                                 <h3>Hire New Conductor</h3>
                                 <div style={styles.gridForm}>
-                                    <input
-                                        placeholder="Username"
-                                        value={conductorFormData.userName}
-                                        onChange={(e) => setConductorFormData({...conductorFormData, userName: e.target.value})}
-                                        style={styles.input} required
-                                    />
-                                    <input
-                                        placeholder="Set Password"
-                                        value={conductorFormData.password}
-                                        onChange={(e) => setConductorFormData({...conductorFormData, password: e.target.value})}
-                                        style={styles.input} required
-                                    />
-                                    <input
-                                        placeholder="Phone Number"
-                                        value={conductorFormData.phoneNo}
-                                        onChange={(e) => setConductorFormData({...conductorFormData, phoneNo: e.target.value})}
-                                        style={styles.input} required
-                                    />
-                                    <input
-                                        placeholder="Address"
-                                        value={conductorFormData.address}
-                                        onChange={(e) => setConductorFormData({...conductorFormData, address: e.target.value})}
-                                        style={styles.input} required
-                                    />
+                                    <input placeholder="Username" value={conductorFormData.userName} onChange={(e) => setConductorFormData({...conductorFormData, userName: e.target.value})} style={styles.input} required />
+                                    <input placeholder="Set Password" value={conductorFormData.password} onChange={(e) => setConductorFormData({...conductorFormData, password: e.target.value})} style={styles.input} required />
+                                    <input placeholder="Phone Number" value={conductorFormData.phoneNo} onChange={(e) => setConductorFormData({...conductorFormData, phoneNo: e.target.value})} style={styles.input} required />
+                                    <input placeholder="Address" value={conductorFormData.address} onChange={(e) => setConductorFormData({...conductorFormData, address: e.target.value})} style={styles.input} required />
                                 </div>
                                 <button type="submit" style={styles.submitBtn}>Save Conductor</button>
                             </form>
                         )}
 
-                        {/* The Table (Same as before) */}
                         <div style={styles.tableContainer}>
                             <table style={styles.table}>
                                 <thead>
@@ -259,7 +233,6 @@ const AdminDashboard = () => {
     );
 };
 
-// --- STYLES ---
 const styles = {
     tabs: { display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ddd', paddingBottom: '10px' },
     tab: { padding: '10px 20px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1rem', color: '#666' },

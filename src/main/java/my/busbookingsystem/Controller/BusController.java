@@ -1,6 +1,7 @@
 package my.busbookingsystem.Controller;
 
 import my.busbookingsystem.Entity.Bus;
+import my.busbookingsystem.Entity.Conductor;
 import my.busbookingsystem.Service.BusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -33,23 +34,9 @@ public class BusController {
 
     // --- 3. Update Bus (Admin Only) ---
     @PutMapping("/update/{id}")
-    public ResponseEntity<Bus> updateBus(@PathVariable Long id, @RequestBody Bus busDetails) {
-        Optional<Bus> busData = busService.getBusById(id);
-
-        if (busData.isPresent()) {
-            Bus bus = busData.get();
-            // Update fields
-            bus.setSeatCount(busDetails.getSeatCount());
-            bus.setDescription(busDetails.getDescription());
-            bus.setDepartureLocation(busDetails.getDepartureLocation());
-            bus.setDestination(busDetails.getDestination());
-            bus.setDepartureTime(busDetails.getDepartureTime());
-            bus.setDestinationTime(busDetails.getDestinationTime());
-
-            return ResponseEntity.ok(busService.saveBus(bus));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Bus> updateBus(@PathVariable Long id, @RequestBody Bus bus) {
+        Bus updated = busService.updateBus(id, bus);
+        return updated != null ? ResponseEntity.ok(updated) : ResponseEntity.notFound().build();
     }
 
     // --- 4. Delete Bus (Admin Only) ---
@@ -59,15 +46,24 @@ public class BusController {
         return ResponseEntity.noContent().build();
     }
 
-    // --- 5. Filter Buses (Admin & Passenger Dropdowns) ---
-    // Example URL: /api/buses/filter?start=Colombo&end=Kandy&depTime=2025-11-30T10:00:00&destTime=...
+    // Filter only by Route
     @GetMapping("/filter")
-    public List<Bus> filterBuses(
-            @RequestParam String departureLocation,
-            @RequestParam String destination,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime departureTime,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime destinationTime) {
+    public List<Bus> filterBuses(@RequestParam String departureLocation, @RequestParam String destination) {
+        return busService.filterBuses(departureLocation, destination);
+    }
 
-        return busService.filterBuses(departureLocation, destination, departureTime, destinationTime);
+    @PutMapping("/{busId}/assign-conductor/{conductorId}")
+    public ResponseEntity<Bus> assignConductor(@PathVariable Long busId, @PathVariable Long conductorId) {
+        return ResponseEntity.ok(busService.assignConductor(busId, conductorId));
+    }
+
+    @PutMapping("/{busId}/unassign-conductor")
+    public ResponseEntity<Bus> unassignConductor(@PathVariable Long busId) {
+        return ResponseEntity.ok(busService.unassignConductor(busId));
+    }
+
+    @GetMapping("/available-conductors")
+    public List<Conductor> getAvailableConductors() {
+        return busService.getAvailableConductors();
     }
 }
