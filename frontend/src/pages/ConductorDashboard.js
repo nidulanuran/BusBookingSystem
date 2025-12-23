@@ -17,7 +17,7 @@ const ConductorDashboard = () => {
         } else {
             console.error("No conductor ID found. User might not be logged in properly.");
         }
-    }, [currentUser]); // dfgerhehr
+    }, [currentUser.conductorId]); // dfgerhehr
 
     return (
         <div>
