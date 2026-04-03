@@ -12,8 +12,8 @@ const Navbar = ({ role }) => {
 
     return (
         <nav style={{
-            background: '#343a40',
-            color: '#fff',
+            background: '#00afd6',
+            color: '#e3e3e3',
             padding: '1rem',
             display: 'flex',
             justifyContent: 'space-between',

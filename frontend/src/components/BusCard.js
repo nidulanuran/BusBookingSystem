@@ -104,13 +104,13 @@ const styles = {
     body: { fontSize: '0.95rem', color: '#555', marginBottom: '15px' },
     footer: { marginTop: 'auto' },
     bookBtn: { width: '100%', padding: '10px', background: '#28a745', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
-    editBtn: { flex: 1, padding: '8px', background: '#ffc107', color: 'black', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
-    deleteBtn: { flex: 1, padding: '8px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
+    editBtn: { flex: 1, padding: '8px', background: '#dfdc01', color: 'black', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
+    deleteBtn: { flex: 1, padding: '8px', background: 'rgba(255,0,28,0.89)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' },
 
     // New Styles for Conductor Section
     select: { flex: 1, padding: '5px', borderRadius: '4px', border: '1px solid #ccc' },
     assignBtn: { padding: '5px 10px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' },
-    smBtn: { padding: '2px 8px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '50%', cursor: 'pointer', fontSize: '0.8rem', marginLeft: '10px' }
+    smBtn: { padding: '6px', background: 'rgba(246,35,35,0.82)', color: 'rgba(221,221,221,0.82)', border: 'none', borderRadius: '60%', cursor: 'pointer', fontSize: '0.8rem', marginLeft: '10px' }
 };
 
 export default BusCard;

@@ -125,13 +125,46 @@ body {
   color: #333;
 }
 
-.close-btn {
+.btn-cancel {
   background: none;
   border: none;
-  font-size: 1.5rem;
   cursor: pointer;
-  color: #888;
+  color: #ffffff;
+
 }
+
+.btn-cancel:hover {
+  display: block;
+  background-color: red;
+  color: #e9ecef;
+
+}
+
+.seats {
+  width: 20px;
+  height: 20px;
+  margin: 2.5px;
+  background: rgba(205, 59, 139, 0.83);
+  border-radius: 4px;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border: solid 1px;
+  display: flex ;
+}
+
+.seats:hover {
+  background: rgba(205, 59, 139, 0.56);
+  border: solid 1px #0c0c0c;
+  color: #000000;
+}
+
+
+
+
+
 
 /* --- 4. Body (Inputs) Section --- */
 .modal-body {
