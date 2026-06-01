@@ -156,9 +156,21 @@ body {
 }
 
 .seats:hover {
-  background: rgba(205, 59, 139, 0.56);
+  background: rgba(202, 94, 154, 0.83);
   border: solid 1px #0c0c0c;
   color: #000000;
+  cursor: pointer;
+}
+
+.seats.selected{
+  background: rgba(202, 94, 154, 0.83);
+}
+
+.seats.disabled{
+  pointer-events: none;
+  cursor: not-allowed;
+  background: #888;
+
 }
 
 
