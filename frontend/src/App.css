@@ -140,39 +140,67 @@ body {
 
 }
 
-.seats {
-  width: 20px;
-  height: 20px;
-  margin: 2.5px;
-  background: rgba(205, 59, 139, 0.83);
-  border-radius: 4px;
+.seating-body{
+  display: flex;
   justify-content: center;
   align-items: center;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  border: solid 1px;
-  display: flex ;
+  flex-direction: column;
 }
 
-.seats:hover {
-  background: rgba(202, 94, 154, 0.83);
-  border: solid 1px #0c0c0c;
-  color: #000000;
-  cursor: pointer;
+.seating-container{
+    border: none;
+    border-radius: 5px;
+    width: 300px;
+    display: flex;
+    height: 412px;
+    justify-content: center;
+    background-color: rgb(226, 226, 226);
+    box-shadow: 2px 2px 5px rgba(102, 102, 102, 0.749);
+}
+
+.backseatsLayout{
+    display: flex;
+    align-items: end;
+    height: 100%;
+    
+}
+
+.seats{
+    margin: 5px;
+    border: none;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2c2c2c;
+    background-color: rgb(117, 133, 227);
+    cursor: pointer;
+    box-shadow: 0px 0px 4px rgba(0, 183, 255, 0.544);
+}
+
+.seats:hover{
+    background-color: rgb(103, 82, 223);
+    box-shadow: 1px 1px 6px rgba(0, 183, 255, 0.544);
 }
 
 .seats.selected{
-  background: rgba(202, 94, 154, 0.83);
+    background-color: rgb(223, 181, 42);
+    box-shadow: 1px 1px 8px rgb(116, 181, 255);
 }
 
 .seats.disabled{
-  pointer-events: none;
-  cursor: not-allowed;
-  background: #888;
-
+    background-color:rgba(164, 164, 164, 0.601) ;
+    
 }
-
+.error{
+    color: red;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    text-align: center;
+    height: 20px;
+   
+}
 
 
 
