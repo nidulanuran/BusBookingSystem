@@ -1,5 +1,6 @@
 package my.busbookingsystem.Controller;
 
+import jakarta.validation.Valid;
 import my.busbookingsystem.Entity.Booking;
 import my.busbookingsystem.Entity.Conductor;
 import my.busbookingsystem.Repository.ConductorRepository;
@@ -48,7 +49,6 @@ public class ConductorController {
     }
 
     // --- 5. View Bus Bookings (Conductor View) ---
-    // The conductor logs in, gets their ID, and calls this endpoint
     @GetMapping("/{id}/bookings")
     public List<Booking> getMyBusBookings(@PathVariable Long id) {
         return conductorService.getBookingsForConductor(id);
@@ -57,8 +57,6 @@ public class ConductorController {
     // --- 6. LOGIN (Public Endpoint) ---
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Conductor loginData) {
-        // Use the Repository directly or via Service to check credentials
-        // Note: In a real app, use a Service for this. Here we use Repository for simplicity.
         Optional<Conductor> conductor = conductorRepository.findByUserNameAndPassword(
                 loginData.getUserName(),
                 loginData.getPassword()
@@ -67,14 +65,17 @@ public class ConductorController {
         if (conductor.isPresent()) {
             return ResponseEntity.ok(conductor.get());
         } else {
-            return ResponseEntity.status(401).body("Invalid Credentials");
+            return ResponseEntity.status(401).body("Invalid Username or Password");
         }
     }
 
-    // --- ADD NEW CONDUCTOR (Admin Feature) ---
+    // --- 7. ADD NEW CONDUCTOR (Admin Feature) ---
     @PostMapping("/add")
-    public Conductor addConductor(@RequestBody Conductor conductor) {
-        return conductorRepository.save(conductor);
+    public ResponseEntity<?> addConductor(@Valid @RequestBody Conductor conductor) {
+        if (conductorRepository.findByUserName(conductor.getUserName()).isPresent()) {
+            return ResponseEntity.badRequest().body("Username is already taken by another conductor.");
+        }
+        Conductor saved = conductorRepository.save(conductor);
+        return ResponseEntity.ok(saved);
     }
-
 }

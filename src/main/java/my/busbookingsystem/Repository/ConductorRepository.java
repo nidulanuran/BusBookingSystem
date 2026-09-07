@@ -13,7 +13,8 @@ public interface ConductorRepository extends JpaRepository<Conductor, Long> {
 
     List<Conductor> findByUserNameContainingIgnoreCase(String userName);
 
-    // This creates a query: SELECT * FROM table WHERE user_name = ? AND password = ?
+    Optional<Conductor> findByUserName(String userName);
+
     Optional<Conductor> findByUserNameAndPassword(String userName, String password);
 
     // Find all conductors whose IDs are NOT present in the Bus table

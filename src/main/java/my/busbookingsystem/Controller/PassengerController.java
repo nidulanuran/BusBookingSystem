@@ -1,5 +1,6 @@
 package my.busbookingsystem.Controller;
 
+import jakarta.validation.Valid;
 import my.busbookingsystem.Entity.Passenger;
 import my.busbookingsystem.Repository.PassengerRepository;
 import my.busbookingsystem.Service.PassengerService;
@@ -27,7 +28,6 @@ public class PassengerController {
     }
 
     // --- 2. Search Passengers (Admin Search Bar) ---
-    // URL: /api/passengers/search?name=john
     @GetMapping("/search")
     public List<Passenger> searchPassengers(@RequestParam String name) {
         return passengerService.searchPassengers(name);
@@ -47,21 +47,19 @@ public class PassengerController {
         return ResponseEntity.noContent().build();
     }
 
-    // Inside PassengerController.java
-
     // --- 5. REGISTER (Public Endpoint) ---
-    // URL: /api/passengers/register
     @PostMapping("/register")
-    public Passenger registerPassenger(@RequestBody Passenger passenger) {
-        // In a real app, you would encrypt the password here before saving
-        return passengerService.savePassenger(passenger);
+    public ResponseEntity<?> registerPassenger(@Valid @RequestBody Passenger passenger) {
+        if (passengerRepository.findByUserName(passenger.getUserName()).isPresent()) {
+            return ResponseEntity.badRequest().body("Username is already taken. Please choose another one.");
+        }
+        Passenger saved = passengerService.savePassenger(passenger);
+        return ResponseEntity.ok(saved);
     }
 
     // --- 6. LOGIN (Public Endpoint) ---
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Passenger loginData) {
-        // Use the Repository directly or via Service to check credentials
-        // Note: In a real app, use a Service for this. Here we use Repository for simplicity.
         Optional<Passenger> passenger = passengerRepository.findByUserNameAndPassword(
                 loginData.getUserName(),
                 loginData.getPassword()
@@ -70,8 +68,7 @@ public class PassengerController {
         if (passenger.isPresent()) {
             return ResponseEntity.ok(passenger.get());
         } else {
-            return ResponseEntity.status(401).body("Invalid Credentials");
+            return ResponseEntity.status(401).body("Invalid Username or Password");
         }
     }
-
 }

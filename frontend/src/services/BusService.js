@@ -50,4 +50,5 @@ class BusService {
 
 }
 
-export default new BusService();
+const busService = new BusService();
+export default busService;

@@ -42,4 +42,5 @@ class PassengerService {
 
 }
 
-export default new PassengerService();
+const passengerService = new PassengerService();
+export default passengerService;

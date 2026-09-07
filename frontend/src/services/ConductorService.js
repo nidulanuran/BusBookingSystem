@@ -42,4 +42,5 @@ class ConductorService {
 
 }
 
-export default new ConductorService();
+const conductorService = new ConductorService();
+export default conductorService;

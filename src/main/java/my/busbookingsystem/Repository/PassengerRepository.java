@@ -11,6 +11,7 @@ import java.util.Optional;
 public interface PassengerRepository extends JpaRepository<Passenger, Long> {
     List<Passenger> findByUserNameContainingIgnoreCase(String userName);
 
-    // This creates a query: SELECT * FROM table WHERE user_name = ? AND password = ?
+    Optional<Passenger> findByUserName(String userName);
+
     Optional<Passenger> findByUserNameAndPassword(String userName, String password);
 }

@@ -28,38 +28,50 @@ public class BookingService {
     private PassengerRepository passengerRepository;
 
     // --- 1. Passenger: Create a New Booking ---
-    // We take the booking object, plus the IDs of the Bus and Passenger to link them
     public Booking createBooking(Booking booking, Long busId, Long passengerId) {
-
-        if (hasActiveBooking(passengerId)){
-            throw new RuntimeException("Passenger already has an active booking.please complete or cancel booking.");
+        if (booking == null) {
+            throw new RuntimeException("Booking details cannot be null.");
         }
 
-        // Find the specific Bus and Passenger from the database
-        Optional<Bus> busOpt = busRepository.findById(busId);
-        Optional<Passenger> passengerOpt = passengerRepository.findById(passengerId);
+        // Validate passenger
+        Passenger passenger = passengerRepository.findById(passengerId)
+                .orElseThrow(() -> new RuntimeException("Passenger not found with ID: " + passengerId));
 
-        if (busOpt.isPresent() && passengerOpt.isPresent()) {
-            Booking newBooking = booking;
+        // Validate bus
+        Bus bus = busRepository.findById(busId)
+                .orElseThrow(() -> new RuntimeException("Bus not found with ID: " + busId));
 
-            // Link them together
-            newBooking.setBus(busOpt.get());
-            newBooking.setPassenger(passengerOpt.get());
-            newBooking.setBookingTimestamp(LocalDateTime.now());
-
-            // Automatically set the "Request Made" time to right now
-            newBooking.setRequestmadeDate(LocalDateTime.now());
-            newBooking.setRequestmadeTime(LocalDateTime.now());
-
-            // Validate Travel Date (Cannot be in the past)
-            if (newBooking.getTravelDate().isBefore(LocalDate.now())) {
-                throw new RuntimeException("Cannot book for a past date.");
-            }
-
-            return bookingRepository.save(newBooking);
+        // Check if passenger already has an active booking
+        if (hasActiveBooking(passengerId)) {
+            throw new RuntimeException("Passenger already has an active booking. Please complete or cancel your ongoing trip first.");
         }
 
-        return null; // Return null if bus or passenger ID is invalid
+        // Validate travel date
+        if (booking.getTravelDate() == null) {
+            throw new RuntimeException("Travel date is required.");
+        }
+
+        if (booking.getTravelDate().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Cannot book for a past date. Please pick today or a future date.");
+        }
+
+        // Validate seat count (1 to 6)
+        if (booking.getNoOfSeatsWants() < 1 || booking.getNoOfSeatsWants() > 6) {
+            throw new RuntimeException("You can book between 1 and 6 seats per reservation.");
+        }
+
+        // Setup booking object
+        booking.setBus(bus);
+        booking.setPassenger(passenger);
+        booking.setBookingTimestamp(LocalDateTime.now());
+        booking.setRequestmadeDate(LocalDateTime.now());
+        booking.setRequestmadeTime(LocalDateTime.now());
+
+        if (booking.getLocation() == null || booking.getLocation().trim().isEmpty()) {
+            booking.setLocation("Online");
+        }
+
+        return bookingRepository.save(booking);
     }
 
     // --- Helper: Check for Active Booking ---
@@ -67,15 +79,18 @@ public class BookingService {
     private boolean hasActiveBooking(Long passengerId) {
         List<Booking> allBookings = bookingRepository.findByPassenger_PassengerId(passengerId);
 
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
         for (Booking b : allBookings) {
-            LocalDate today = LocalDate.now();
-            LocalTime now = LocalTime.now();
+            if (b.getTravelDate() == null) continue;
 
             boolean isFutureDate = b.getTravelDate().isAfter(today);
-            boolean isTodayAndNotExpired = b.getTravelDate().isEqual(today) && b.getBus().getDestinationTime().isAfter(now);
+            boolean isTodayAndNotExpired = b.getTravelDate().isEqual(today) &&
+                    (b.getBus() != null && b.getBus().getDestinationTime() != null && b.getBus().getDestinationTime().isAfter(now));
 
             if (isFutureDate || isTodayAndNotExpired) {
-                return true; // Found an active booking
+                return true;
             }
         }
         return false;
@@ -91,7 +106,7 @@ public class BookingService {
         bookingRepository.deleteById(bookingId);
     }
 
-    // --- 4. Admin/Conductor: Helper to see specific booking details ---
+    // --- 4. Helper to see specific booking details ---
     public Optional<Booking> getBookingById(Long id) {
         return bookingRepository.findById(id);
     }

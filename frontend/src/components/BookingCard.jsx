@@ -1,405 +1,203 @@
-import { useState } from "react"
+import React, { useState } from 'react';
+import '../App.css';
 
-function BookingCard(){
+/**
+ * BookingCard — Interactive Visual Bus Seat Picker
+ * Props:
+ *   onSeatsChange: (count: number) => void
+ *   maxSeats: number   — default 6
+ *   totalSeats: number — total seats on this bus
+ */
+function BookingCard({ onSeatsChange, maxSeats = 6, totalSeats = 40 }) {
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [errorMsg, setErrorMsg] = useState('');
 
-   const [selectedSeats,setSelectedSeats]=useState([])
-   const [seatCount, setSeatCount] = useState(1)
-   const [error,setError]=useState(null)
+  const displaySeats = Math.min(Math.max(totalSeats, 20), 50);
 
-   function handleSeatClick(seat){
+  // 2 + aisle + 2 arrangement
+  const rowCount = Math.floor((displaySeats - 2) / 4);
+  const leftSeats = [];
+  const rightSeats = [];
+  const rearSeats = [];
 
-    if(seatCount<6 || selectedSeats.includes(seat)){
-        setSelectedSeats(prevSeats=>{
+  for (let row = 0; row < rowCount; row++) {
+    leftSeats.push(row * 4 + 1, row * 4 + 2);
+    rightSeats.push(row * 4 + 3, row * 4 + 4);
+  }
 
-            const updatedSeats=selectedSeats.includes(seat)
-            ? selectedSeats.filter((s)=> s !== seat)
-            : [...prevSeats,seat]
-            setSeatCount(updatedSeats.length)
-            setError("")
-            return updatedSeats
-        
-        })
-    }
-    else{
-        setError("you can select 6 seats only ")
-    }
-        
-       
-    }
+  const coveredSeats = rowCount * 4;
+  for (let i = coveredSeats + 1; i <= displaySeats; i++) {
+    rearSeats.push(i);
+  }
 
-    function errorHandler(err){
-        setError(err)
-    }
+  const handleSeatClick = (seatNo) => {
+    setErrorMsg('');
+    setSelectedSeats(prev => {
+      let updated;
+      if (prev.includes(seatNo)) {
+        updated = prev.filter(s => s !== seatNo);
+      } else {
+        if (prev.length >= maxSeats) {
+          setErrorMsg(`Maximum ${maxSeats} seats allowed per reservation.`);
+          return prev;
+        }
+        updated = [...prev, seatNo].sort((a, b) => a - b);
+      }
+      if (onSeatsChange) onSeatsChange(updated.length);
+      return updated;
+    });
+  };
 
-    return(
-<div className="seating-body">
-    <div className="seating-container">
-        <div className="leftseatsLayout">
+  const getSeatClass = (seatNo) => {
+    const isSelected = selectedSeats.includes(seatNo);
+    const isFull = selectedSeats.length >= maxSeats && !isSelected;
+    if (isSelected) return 'seat-btn seat-btn-selected';
+    if (isFull) return 'seat-btn seat-btn-disabled';
+    return 'seat-btn';
+  };
 
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(1) ? "selected" : ""}
-                                        ${seatCount >=6 && !selectedSeats.includes(1) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(1)}
-                >01</button>
+  const renderSeat = (seatNo) => (
+    <button
+      key={seatNo}
+      type="button"
+      className={getSeatClass(seatNo)}
+      onClick={() => handleSeatClick(seatNo)}
+      disabled={selectedSeats.length >= maxSeats && !selectedSeats.includes(seatNo)}
+      aria-label={`Seat ${seatNo}${selectedSeats.includes(seatNo) ? ', selected' : ''}`}
+      aria-pressed={selectedSeats.includes(seatNo)}
+    >
+      {seatNo < 10 ? `0${seatNo}` : seatNo}
+    </button>
+  );
 
-                <button
-                    className={`seats ${selectedSeats.includes(2) ? "selected" : ""}
-                                    ${seatCount >=6 && !selectedSeats.includes(2) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(2)}
-                >02</button>
-            </div>
+  return (
+    <div className="seat-picker-container">
+      {/* Legend */}
+      <div className="seat-legend">
+        <div className="seat-legend-item">
+          <div className="seat-legend-dot free" />
+          <span>Available</span>
+        </div>
+        <div className="seat-legend-item">
+          <div className="seat-legend-dot selected" />
+          <span>Selected</span>
+        </div>
+        <div className="seat-legend-item">
+          <div className="seat-legend-dot taken" />
+          <span>Limit reached</span>
+        </div>
+      </div>
 
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(5) ? "selected" : ""}
-                                    ${seatCount >=6 && !selectedSeats.includes(5) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(5)}
-                >05</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(6) ? "selected" : ""}
-                                    ${seatCount >=6 && !selectedSeats.includes(6) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(6)}
-                >06</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(9) ? "selected" : ""}
-                                    ${seatCount >=6 && !selectedSeats.includes(9) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(9)}
-                >09</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(10) ? "selected" : ""}
-                                    ${seatCount >=6 && !selectedSeats.includes(10) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(10)}
-                >10</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(13) ? "selected" : ""}
-                                    ${seatCount >=6 && !selectedSeats.includes(13) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(13)}
-                >13</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(14) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(14) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(14)}
-                >14</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(17) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(17) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(17)}
-                >17</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(18) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(18) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(18)}
-                >18</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(21) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(21) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(21)}
-                >21</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(22) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(22) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(22)}
-                >22</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(25) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(25) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(25)}
-                >25</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(26) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(26) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(26)}
-                >26</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(29) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(29) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(29)}
-                >29</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(30) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(30) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(30)}
-                >30</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(33) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(33) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(33)}
-                >33</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(34) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(34) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(34)}
-                >34</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(37) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(37) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(37)}
-                >37</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(38) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(38) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(38)}
-                >38</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(41) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(41) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(41)}
-                >41</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(42) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(42) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(42)}
-                >42</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(45) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(45) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(45)}
-                >45</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(46) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(46) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(46)}
-                >46</button>
-            </div>
-
-
+      {/* Bus Cabin Body */}
+      <div className="bus-body" role="group" aria-label="Bus seating map">
+        {/* Cockpit / Driver Area */}
+        <div className="bus-front-cockpit">
+          <div className="cockpit-steering" title="Driver's Seat">
+            ⎈
+          </div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', letterSpacing: '0.05em' }}>
+            FRONT
+          </div>
+          <div className="cockpit-door">
+            DOOR ➔
+          </div>
         </div>
 
-        <div className="backseatsLayout">
+        {/* Main Seat Aisle */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+          {/* Left Column (2 seats) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {Array.from({ length: rowCount }, (_, row) => (
+              <div key={row} style={{ display: 'flex', gap: '6px' }}>
+                {renderSeat(row * 4 + 1)}
+                {renderSeat(row * 4 + 2)}
+              </div>
+            ))}
+          </div>
 
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(47) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(47) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(47)}
-                >47</button>
+          {/* Walking Aisle */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{
+              width: '2px',
+              height: `${rowCount * 50}px`,
+              background: 'repeating-linear-gradient(to bottom, #CBD5E1 0px, #CBD5E1 6px, transparent 6px, transparent 14px)'
+            }} />
+          </div>
 
-                <button
-                    className={`seats ${selectedSeats.includes(48) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(48) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(48)}
-                >48</button>
-            </div>
-
+          {/* Right Column (2 seats) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {Array.from({ length: rowCount }, (_, row) => (
+              <div key={row} style={{ display: 'flex', gap: '6px' }}>
+                {renderSeat(row * 4 + 3)}
+                {renderSeat(row * 4 + 4)}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="rightseatsLayout">
+        {/* Rear Row */}
+        {rearSeats.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              gap: '6px',
+              marginTop: '10px',
+              paddingTop: '10px',
+              borderTop: '2px dashed #CBD5E1',
+              justifyContent: 'center',
+            }}
+          >
+            {rearSeats.map(renderSeat)}
+          </div>
+        )}
+      </div>
 
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(3) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(3) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(3)}
-                >03</button>
+      {/* Live Seat Count & Tags */}
+      <div className="seat-count-display">
+        <div className="seat-count-number">{selectedSeats.length}</div>
+        <div className="seat-count-label">
+          {selectedSeats.length === 1 ? 'Seat Selected' : 'Seats Selected'} (Max {maxSeats})
+        </div>
 
-                <button
-                    className={`seats ${selectedSeats.includes(4) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(4) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(4)}
-                >04</button>
-            </div>
+        {selectedSeats.length > 0 && (
+          <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+            {selectedSeats.map(s => (
+              <span
+                key={s}
+                style={{
+                  background: 'var(--color-primary-light)',
+                  color: 'var(--color-primary)',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(79, 70, 229, 0.2)'
+                }}
+              >
+                Seat #{s < 10 ? `0${s}` : s}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(7) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(7) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(7)}
-                >07</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(8) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(8) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(8)}
-                >08</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(11) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(11) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(11)}
-                >11</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(12) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(12) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(12)}
-                >12</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(15) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(15) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(15)}
-                >15</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(16) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(16) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(16)}
-                >16</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(19) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(19) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(19)}
-                >19</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(20) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(20) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(20)}
-                >20</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(23) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(23) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(23)}
-                >23</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(24) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(24) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(24)}
-                >24</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(27) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(27) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(27)}
-                >27</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(28) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(28) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(28)}
-                >28</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(31) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(31) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(31)}
-                >31</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(32) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(32) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(32)}
-                >32</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(35) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(35) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(35)}
-                >35</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(36) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(36) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(36)}
-                >36</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(39) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(39) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(39)}
-                >39</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(40) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(40) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(40)}
-                >40</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(43) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(43) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(43)}
-                >43</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(44) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(44) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(44)}
-                >44</button>
-            </div>
-
-            <div >
-                <button
-                    className={`seats ${selectedSeats.includes(49) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(49) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(49)}
-                >49</button>
-
-                <button
-                    className={`seats ${selectedSeats.includes(50) ? "selected" : ""}
-                            ${seatCount >=6 && !selectedSeats.includes(50) ? "disabled" : ""}`}
-                    onClick={() => handleSeatClick(50)}
-                >50</button>
-            </div>
-
-        </div> 
-        
+      {/* Error Message Banner */}
+      {errorMsg && (
+        <p
+          role="alert"
+          style={{
+            color: 'var(--color-danger)',
+            fontSize: '0.85rem',
+            textAlign: 'center',
+            marginTop: '0.75rem',
+            fontWeight: 600,
+          }}
+        >
+          ⚠️ {errorMsg}
+        </p>
+      )}
     </div>
-    <p className="error">{error}</p>
-</div>)
-
+  );
 }
-export default BookingCard
+
+export default BookingCard;
