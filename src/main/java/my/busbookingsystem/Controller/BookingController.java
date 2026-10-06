@@ -47,4 +47,7 @@ public class BookingController {
         bookingService.cancelBooking(id);
         return ResponseEntity.noContent().build();
     }
+
+    
+
 }

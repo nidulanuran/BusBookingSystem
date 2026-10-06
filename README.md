@@ -1,58 +1,75 @@
-# 🚌 Bus Booking System
+# 🚌 Bus Booking & Real-Time Fleet Tracking System
 
-A full-stack, enterprise-grade Bus Booking and Fleet Management web application. The platform streamlines bus scheduling, seat reservation, and trip coordination between passengers, bus conductors, and administrators.
+A full-stack, enterprise-grade Bus Booking, Real-Time GPS Fleet Tracking, and Transit Management ecosystem. The platform seamlessly coordinates bus scheduling, interactive seat reservation, live GPS telemetry, and passenger manifests across **Web (React)** and **Mobile (Flutter)** applications powered by a **Spring Boot** backend.
 
 ---
 
 ## 📋 Table of Contents
 1. [Overview](#-overview)
-2. [System Architecture](#-system-architecture)
+2. [Ecosystem Architecture](#-ecosystem-architecture)
 3. [Technology Stack](#-technology-stack)
 4. [Project Structure](#-project-structure)
 5. [Core Entities & Database Design](#-core-entities--database-design)
-6. [User Roles & Key Capabilities](#-user-roles--key-capabilities)
-7. [Installation & Setup Guide](#-installation--setup-guide)
-8. [Configuration & Environment](#-configuration--environment)
-9. [Running the Application](#-running-the-application)
-10. [Default Credentials](#-default-credentials)
-11. [Related Documentation](#-related-documentation)
+6. [User Roles & Capabilities](#-user-roles--capabilities)
+7. [🛰️ Real-Time GPS Bus Tracking System](#-real-time-gps-bus-tracking-system)
+8. [📱 Flutter Mobile Application](#-flutter-mobile-application)
+9. [Installation & Setup Guide](#-installation--setup-guide)
+10. [Configuration & Environment](#-configuration--environment)
+11. [Running the Application](#-running-the-application)
+12. [Default Credentials](#-default-credentials)
+13. [Implementation Roadmap](#-implementation-roadmap)
+14. [Related Documentation](#-related-documentation)
 
 ---
 
 ## 📖 Overview
 
-The **Bus Booking System** is designed to solve real-world intercity transit challenges by providing a synchronized platform for three primary stakeholders:
-- **Passengers:** Search bus routes, select seats through an interactive bus seating chart, book tickets, and manage travel itineraries.
-- **Conductors:** View live passenger manifests for their assigned buses, monitor passenger seat allocations, and verify passenger contact details.
-- **Administrators:** Manage the bus fleet, configure travel schedules, hire and assign conductors, and oversee passenger accounts.
+The **Bus Booking & Fleet Tracking System** is designed to modernize public and private intercity transit by solving scheduling, ticketing, and route visibility challenges for three primary user roles:
+
+- **Passengers:** Search routes, reserve specific seats through an interactive bus seating layout, cancel bookings, view trip history, and **track their booked bus in real time on an interactive map** with live ETAs.
+- **Conductors:** View real-time digital passenger manifests, verify boarding details, and **broadcast live GPS coordinates** from their mobile device during active trips.
+- **Administrators:** Manage the bus fleet, configure schedules and routes, recruit conductors, oversee passengers, and monitor nationwide fleet operations on a centralized live map.
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ Ecosystem Architecture
 
-The application adopts a **3-Tier Client-Server Architecture** with strict separation of concerns:
+The application adopts a decoupled, multi-client **Client-Server & Event-Driven Architecture**:
 
 ```mermaid
 graph TD
-    subgraph Client_Tier ["Presentation Layer (Frontend - React 19)"]
-        UI[React UI Components & Pages]
-        State[React State & Hooks]
-        Axios[Axios HTTP Client]
-        Router[React Router v7]
-        UI --> State
-        State --> Axios
-        Router --> UI
+    subgraph Clients ["Client Layer (Web & Mobile)"]
+        subgraph Web_Client ["React 19 Web Portal"]
+            WebUI[React UI Components]
+            WebState[React State & Hooks]
+            WebMap[Leaflet / OpenStreetMap]
+            WebWS[STOMP WebSocket Client]
+            WebAxios[Axios REST Client]
+        end
+
+        subgraph Mobile_Client ["Flutter Cross-Platform Mobile App"]
+            FlutterUI[Flutter UI Widgets]
+            FlutterBloc[State Management - BLoC / Provider]
+            FlutterMap[Flutter Map / OSM]
+            FlutterGPS[Geolocator GPS Service]
+            FlutterWS[STOMP / WebSocket Channel]
+            FlutterDio[Dio / HTTP Client]
+        end
     end
 
-    subgraph App_Tier ["Application Layer (Backend - Spring Boot 3.5.6)"]
-        Controllers[REST Controllers<br/>/api/buses, /api/bookings, etc.]
-        Services[Business Logic Service Layer<br/>BookingService, BusService, etc.]
+    subgraph Backend_Tier ["Application Layer (Spring Boot 3.5.6)"]
+        RESTControllers[REST Controllers<br/>/api/buses, /api/bookings, etc.]
+        WSEndpoint[WebSocket & STOMP Broker<br/>/app/bus-location, /topic/bus/{id}]
+        Services[Business Logic Service Layer]
+        LocationCache[In-Memory Location Cache<br/>ConcurrentHashMap / Redis]
+        Validation[Jakarta Validation Engine]
         Repos[Spring Data JPA Repositories]
-        Validation[Bean Validation / Rules Engine]
-        
-        Controllers --> Validation
+
+        RESTControllers --> Validation
         Validation --> Services
         Services --> Repos
+        WSEndpoint --> LocationCache
+        LocationCache -.-> Repos
     end
 
     subgraph Data_Tier ["Data Layer (PostgreSQL 12+)"]
@@ -60,44 +77,50 @@ graph TD
         Repos --> DB
     end
 
-    Axios -- "HTTP REST (JSON) / Port 8080" --> Controllers
+    WebAxios -- "HTTP REST (JSON)" --> RESTControllers
+    FlutterDio -- "HTTP REST (JSON)" --> RESTControllers
+    WebWS <-->|"STOMP over WebSocket (Pub/Sub)"| WSEndpoint
+    FlutterWS <-->|"STOMP over WebSocket (Pub/Sub)"| WSEndpoint
+    FlutterGPS -->|"Live Telemetry Pings"| FlutterWS
 ```
-
-### Architectural Highlights:
-- **Presentation Layer (React 19):** Single Page Application (SPA) driven by React Router v7 and styled with CSS3. Communicates asynchronously with the backend via Axios REST calls.
-- **Business Logic Layer (Spring Boot 3.5.6):** Implements modular controllers and services. Handles constraint checks (e.g., active booking collision prevention, strict 10-digit phone verification, date validity).
-- **Persistence Layer (Spring Data JPA / Hibernate):** Object-Relational Mapping (ORM) mapping Java domain entities to PostgreSQL tables with relationship cascading and foreign key integrity.
 
 ---
 
 ## 🛠️ Technology Stack
 
-### Backend
-| Technology | Version | Description |
+### Backend (Core API & Real-Time Broker)
+| Technology | Version / Tool | Description |
 | :--- | :--- | :--- |
-| **Java** | 17 | Core programming language |
-| **Spring Boot** | 3.5.6 | Application framework |
-| **Spring Data JPA** | 3.5.6 | Object-Relational Mapping and database abstraction |
+| **Java** | 17 LTS | Core programming language |
+| **Spring Boot** | 3.5.6 | Enterprise application framework |
+| **Spring Data JPA** | 3.5.6 | ORM and persistence abstraction |
+| **Spring WebSocket** | STOMP / SockJS | Bidirectional pub/sub broker for real-time GPS streaming |
 | **Hibernate** | 6.x | JPA implementation provider |
-| **Spring Validation** | Jakarta Validation | Input validation and constraints |
-| **Lombok** | 1.18.x | Boilerplate code reduction |
-| **PostgreSQL Driver** | 42.x | JDBC driver for PostgreSQL |
-| **Maven** | 3.x | Build and dependency management |
+| **PostgreSQL Driver** | 42.x | High-performance relational database connectivity |
+| **Jakarta Validation**| 3.x | Constraints and validation rules |
+| **Lombok** | 1.18.x | Boilerplate code generator |
+| **Maven** | 3.x | Dependency and build management |
 
-### Frontend
-| Technology | Version | Description |
+### Web Frontend (Administration & Desktop Portal)
+| Technology | Version / Tool | Description |
 | :--- | :--- | :--- |
-| **React** | 19.2.0 | UI rendering library |
-| **React DOM** | 19.2.0 | DOM renderer for React |
-| **React Router DOM** | 7.9.6 | Client-side routing and page navigation |
+| **React** | 19.2.0 | Reactive component rendering library |
+| **React Router** | 7.9.6 | Client-side routing and navigation |
 | **Axios** | 1.13.2 | Promise-based HTTP client |
-| **CSS3** | — | Custom responsive UI styling & seating layout |
+| **Leaflet / React-Leaflet** | Latest | Open-source interactive map engine |
+| **@stomp/stompjs** | Latest | STOMP protocol client over WebSockets |
+| **CSS3** | Modular CSS | Responsive styling & interactive seat picker |
 
-### Database & Infrastructure
-| Technology | Description |
-| :--- | :--- |
-| **PostgreSQL** | Relational Database Management System (RDBMS) |
-| **CORS** | Cross-Origin Resource Sharing configured for `http://localhost:3000` |
+### Mobile Application (Flutter Cross-Platform)
+| Technology | Package / Tool | Description |
+| :--- | :--- | :--- |
+| **Flutter SDK** | 3.x / Dart 3.x | Cross-platform framework for Android & iOS |
+| **State Management** | flutter_bloc / provider | Reactive architecture and separated business logic |
+| **Networking** | dio / http | REST API client with interceptors and token handling |
+| **WebSocket** | stomp_dart_client | Real-time STOMP client for tracking topics |
+| **Device Geolocation** | geolocator | High-accuracy GPS location tracking for conductors |
+| **Mapping Engine** | flutter_map / latlong2 | OpenStreetMap-based mobile map rendering |
+| **Local Storage** | flutter_secure_storage | Secure token and session persistence |
 
 ---
 
@@ -106,76 +129,90 @@ graph TD
 ```text
 BusBookingSystem/
 ├── doc/                                 # Architectural & API documentation
-│   ├── api-endpoints.md
-│   ├── project-arc.md
-│   └── setup.md
-├── frontend/                            # React Frontend SPA
+│   ├── api-endpoints.md                 # Complete REST endpoint catalog
+│   ├── project-arc.md                   # System architectural specifications
+│   └── setup.md                         # Detailed environment setup
+├── frontend/                            # React 19 Web Application
 │   ├── public/
 │   │   ├── index.html
 │   │   └── manifest.json
 │   ├── src/
-│   │   ├── assets/                      # Application images & icons
+│   │   ├── assets/                      # Application icons and media
 │   │   ├── components/                  # Reusable UI components
-│   │   │   ├── BookingCard.jsx          # Interactive 50-seat bus visual layout
-│   │   │   ├── BusCard.jsx              # Bus display card with role-specific actions
-│   │   │   ├── BusFilter.jsx            # Departure/Destination route search filter
-│   │   │   └── Navbar.jsx               # Navigation bar with role and logout
+│   │   │   ├── BookingCard.jsx          # Visual 50-seat bus layout
+│   │   │   ├── BusCard.jsx              # Bus display card with actions
+│   │   │   ├── BusFilter.jsx            # Origin/destination route search
+│   │   │   ├── LiveBusTracker.jsx       # Interactive Leaflet live tracking map
+│   │   │   └── Navbar.jsx               # Role-based navigation bar
 │   │   ├── pages/                       # Screen views
-│   │   │   ├── AdminDashboard.jsx       # Admin management (Buses, Conductors, Passengers)
-│   │   │   ├── ConductorDashboard.jsx   # Conductor passenger list view
-│   │   │   ├── Login.jsx                # Multi-role authentication page
-│   │   │   ├── PassengerDashboard.jsx   # Passenger booking & history dashboard
-│   │   │   └── Register.jsx             # Passenger account registration
-│   │   ├── services/                    # Axios API integration modules
+│   │   │   ├── AdminDashboard.jsx       # Fleet & workforce management
+│   │   │   ├── ConductorDashboard.jsx   # Manifest & GPS broadcasting
+│   │   │   ├── Login.jsx                # Multi-role authentication
+│   │   │   ├── PassengerDashboard.jsx   # Booking history & live tracking
+│   │   │   └── Register.jsx             # Passenger registration
+│   │   ├── services/                    # REST API & WebSocket clients
 │   │   │   ├── AdminService.js
 │   │   │   ├── BookingService.js
 │   │   │   ├── BusService.js
 │   │   │   ├── ConductorService.js
-│   │   │   └── PassengerService.js
-│   │   ├── App.css                      # Global and component styles
-│   │   ├── App.js                       # App component & client route table
-│   │   └── index.js                     # React DOM entry point
-│   ├── package.json
-│   └── README.md
+│   │   │   ├── PassengerService.js
+│   │   │   └── WebSocketService.js      # STOMP broker subscription service
+│   │   ├── App.css
+│   │   ├── App.js
+│   │   └── index.js
+│   └── package.json
+├── mobile_app/                          # Flutter Mobile Application (Cross-Platform)
+│   ├── android/                         # Native Android configuration (Permissions, Gradle)
+│   ├── ios/                             # Native iOS configuration (Info.plist, Pods)
+│   ├── lib/
+│   │   ├── core/                        # Constants, themes, network clients, errors
+│   │   │   ├── constants/               # API endpoints & route constants
+│   │   │   ├── network/                 # Dio client & STOMP client wrapper
+│   │   │   └── utils/                   # Coordinate formatters & time helpers
+│   │   ├── features/
+│   │   │   ├── auth/                    # Login, Register, Session management
+│   │   │   ├── booking/                 # Seat layout picker, booking submission
+│   │   │   ├── conductor/               # Passenger manifest & GPS broadcast engine
+│   │   │   ├── fleet/                   # Route search, bus catalog
+│   │   │   └── tracking/                # Live OpenStreetMap tracker with moving markers
+│   │   └── main.dart                    # Mobile app entry point
+│   └── pubspec.yaml                     # Flutter dependencies & assets
 ├── src/                                 # Spring Boot Backend Source
 │   ├── main/
-│   │   ├── java/my/busbookingsystem/
+│   │   ├── java/my/BusBookingSystem/
 │   │   │   ├── Config/
-│   │   │   │   └── DBconfig.java        # Database configuration
-│   │   │   ├── Controller/              # REST API Controllers
+│   │   │   │   ├── DBconfig.java        # Database configuration
+│   │   │   │   └── WebSocketConfig.java # STOMP broker configuration
+│   │   │   ├── Controller/              # REST & WebSocket Controllers
 │   │   │   │   ├── AdminController.java
 │   │   │   │   ├── BookingController.java
 │   │   │   │   ├── BusController.java
 │   │   │   │   ├── ConductorController.java
+│   │   │   │   ├── LocationController.java # STOMP telemetry broadcast handler
 │   │   │   │   └── PassengerController.java
+│   │   │   ├── DTO/                     # Data Transfer Objects
+│   │   │   │   └── BusLocationDTO.java  # GPS telemetry payload
 │   │   │   ├── Entity/                  # JPA Database Entities
 │   │   │   │   ├── Admin.java
 │   │   │   │   ├── Booking.java
 │   │   │   │   ├── Bus.java
 │   │   │   │   ├── Conductor.java
 │   │   │   │   └── Passenger.java
-│   │   │   ├── Repository/              # Spring Data Repositories
-│   │   │   │   ├── AdminRepository.java
-│   │   │   │   ├── BookingRepository.java
-│   │   │   │   ├── BusRepository.java
-│   │   │   │   ├── ConductorRepository.java
-│   │   │   │   └── PassengerRepository.java
-│   │   │   ├── Service/                 # Business Logic Layer
+│   │   │   ├── Repository/              # Spring Data JPA Repositories
+│   │   │   ├── Service/                 # Business Logic Services
 │   │   │   │   ├── BookingService.java
 │   │   │   │   ├── BusService.java
 │   │   │   │   ├── ConductorService.java
+│   │   │   │   ├── LocationTrackingService.java # In-memory coordinate cache & publisher
 │   │   │   │   └── PassengerService.java
-│   │   │   ├── BusBookingSystemApplication.java # Spring Boot Entry Point
-│   │   │   └── DataSeeder.java          # Automatic DB seed for Super Admin
+│   │   │   ├── BusBookingSystemApplication.java
+│   │   │   └── DataSeeder.java          # Super Admin auto-initialization
 │   │   └── resources/
-│   │       ├── application.properties   # Database credentials & server config
-│   │       ├── static/
-│   │       └── templates/
-│   └── test/                            # Backend Unit & Integration Tests
+│   │       └── application.properties   # Database connection & server config
+│   └── test/
 ├── pom.xml                              # Maven Project Descriptor
-├── mvnw & mvnw.cmd                      # Maven Wrapper scripts
-├── README.md                            # Project Readme (This document)
-└── PROJECT_FUNCTIONS.md                 # Detailed Functional Specification Report
+├── README.md                            # Comprehensive Project Guide (This document)
+└── PROJECT_FUNCTIONS.md                 # Detailed Functional Specification Catalog
 ```
 
 ---
@@ -208,6 +245,10 @@ erDiagram
         time destinationTime
         int seatCount
         string description
+        double currentLatitude
+        double currentLongitude
+        string tripStatus
+        timestamp lastPingTime
         bigint conductorId FK
         bigint adminId FK
     }
@@ -245,49 +286,86 @@ erDiagram
 
 ---
 
-## 👥 User Roles & Key Capabilities
+## 👥 User Roles & Capabilities
 
-### 1. Passenger
-- **Registration & Login:** Self-registration with 10-digit phone verification; login authentication.
-- **Route Search & Filtering:** Filter buses by origin and destination cities (e.g., Colombo, Kandy, Galle, Matara, etc.).
-- **Interactive Seat Reservation:** Visual 50-seat bus layout with interactive selection (1 to 6 seats per booking).
-- **Date Picker & Conflict Check:** Select upcoming travel dates. System prevents booking duplicate trips if an active booking is already running.
-- **Booking Management:** Review active & past booking history; cancel active reservations in real-time.
+### 1. Passenger (Web & Mobile)
+- **Account Management:** User registration with 10-digit phone verification; secure login.
+- **Route Search & Schedule Browsing:** Filter buses by origin/destination (Colombo, Kandy, Galle, Matara, Jaffna, etc.).
+- **Interactive Seat Reservation:** Visual 50-seat bus layout picker with individual seat status and a 6-seat-per-booking cap.
+- **Collision Prevention:** Automated guardrails preventing overlapping bookings while a trip is active.
+- **Booking History & Cancellation:** Immediate ticket cancellation with live database updates.
+- **Live GPS Tracking:** Follow the booked bus on an interactive map with real-time marker animations and route progress.
 
-### 2. Conductor
-- **Dedicated Authentication:** Secure login for bus operators.
-- **Assigned Bus Manifest:** Automatically retrieves trip reservations for their assigned bus.
-- **Passenger List:** View passenger names, contact numbers, and booked seat counts for on-board verification.
+### 2. Conductor (Web & Mobile App)
+- **Dedicated Authentication:** Secure conductor sign-in.
+- **Assigned Trip Manifest:** Access live passenger rosters (names, phone numbers, seat counts).
+- **GPS Broadcasting Engine:** One-tap toggle ("Start Trip") that turns the conductor's mobile device into a high-precision GPS beacon broadcasting coordinate packets every few seconds.
 
-### 3. Administrator
-- **Fleet Management:** Add new buses with schedules, seat capacities, and route details; update existing buses; delete retired buses.
-- **Conductor Workforce Management:** Hire new conductors; search conductor records; assign or unassign available conductors to buses.
-- **Passenger Administration:** View all registered passengers and manage accounts.
-- **Super Admin Auto-Seeding:** Automatic initialization of default administrator credentials on startup.
+### 3. Administrator (Web Portal)
+- **Fleet Management:** Create, modify, and retire buses; configure routes and schedules.
+- **Workforce Management:** Recruit conductors, inspect rosters, and dynamically assign conductors to buses.
+- **Passenger Oversight:** Search, audit, and manage passenger accounts.
+- **Central Fleet Map:** Nationwide overview map displaying real-time positions and statuses of all active buses in service.
+
+---
+
+## 🛰️ Real-Time GPS Bus Tracking System
+
+### Telemetry Pipeline
+1. **Coordinate Acquisition:**
+   - **Mobile Conductor App (Primary):** Background/foreground GPS service using Flutter `geolocator` transmitting `latitude`, `longitude`, `speed`, `heading`, and `timestamp`.
+   - **Web Browser Fallback:** HTML5 Geolocation API (`navigator.geolocation.watchPosition`).
+   - **Route Simulator (Dev/Demo Mode):** Built-in coordinates playback service simulating transit along predefined waypoints (e.g., A1 Highway: Colombo $\rightarrow$ Kandy).
+2. **Backend Brokerage (Spring Boot WebSocket):**
+   - Ingestion endpoint: `/app/bus-location`
+   - Real-time in-memory cache: Stores latest coordinates without overwhelming the relational database with disk I/O.
+   - Pub/Sub distribution: Broadcasts to destination topic `/topic/bus/{busId}` and aggregate fleet topic `/topic/fleet`.
+3. **Map Visualization:**
+   - Powered by **OpenStreetMap** tiles via **Leaflet** (Web) and **flutter_map** (Mobile) — 100% free with no proprietary API key dependencies or quota billing limits.
+   - Smooth marker interpolation prevents jitter between periodic pings.
+   - Displays estimated time of arrival (ETA) and route polylines.
+
+---
+
+## 📱 Flutter Mobile Application
+
+The **Flutter Mobile App** provides an on-the-go experience for travelers and bus operators alike:
+
+### Key Features
+- **Adaptive Cross-Platform UI:** Native look and feel conforming to Material 3 design on both Android and iOS.
+- **Passenger Module:**
+  - Interactive seat selection with tactile feedback.
+  - Ticket confirmation with digital boarding passes.
+  - Interactive live tracking screen centering on the bus with smooth location updates via WebSockets.
+- **Conductor Module:**
+  - Fast search through the passenger list for boarding verification.
+  - Background location broadcasting service enabled with battery-efficient location settings.
+  - Offline resilience with network reconnection handling.
 
 ---
 
 ## ⚙️ Installation & Setup Guide
 
 ### Prerequisites
-Make sure you have the following installed on your machine:
-- **Java Development Kit (JDK):** Version 17 or later (`java -version`)
+Make sure the following tools are installed:
+- **Java Development Kit (JDK):** Version 17+ (`java -version`)
 - **Node.js & npm:** Node 18+ and npm 9+ (`node -v`, `npm -v`)
-- **PostgreSQL:** Version 12 or later (`psql --version`)
+- **Flutter SDK:** Version 3.x+ (`flutter doctor`)
+- **PostgreSQL:** Version 12+ (`psql --version`)
 - **Git:** Version control (`git --version`)
 
 ---
 
 ## 🔧 Configuration & Environment
 
-### 1. Database Creation
-Launch PostgreSQL via `psql` or pgAdmin and create the database:
+### 1. Database Initialization
+Create the PostgreSQL database instance:
 ```sql
 CREATE DATABASE "BusBookingSystemDB";
 ```
 
-### 2. Configure Backend Database Connection
-Open `src/main/resources/application.properties` and verify your credentials:
+### 2. Backend Properties Configuration
+Check `src/main/resources/application.properties` and verify your local database credentials:
 ```properties
 spring.application.name=BusBookingSystem
 
@@ -307,45 +385,70 @@ server.port=8080
 
 ## 🚀 Running the Application
 
-### 1. Start Backend Service
-From the project root directory:
+### 1. Launch Backend Server
+From the project root:
 
-**On Windows:**
+**Windows (PowerShell):**
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-**On Linux/macOS:**
+**Linux / macOS:**
 ```bash
 ./mvnw spring-boot:run
 ```
-> The backend server will start on `http://localhost:8080`.
+> The API and WebSocket broker will start on `http://localhost:8080`.
 
-### 2. Start Frontend Application
-Open a new terminal window, navigate to the `frontend` folder, and run:
+---
+
+### 2. Launch React Web Portal
+From the `frontend` folder:
 ```bash
 cd frontend
 npm install
 npm start
 ```
-> The React development server will start on `http://localhost:3000` and automatically open in your browser.
+> The web application will launch on `http://localhost:3000`.
+
+---
+
+### 3. Launch Flutter Mobile App
+From the `mobile_app` directory:
+```bash
+cd mobile_app
+flutter pub get
+flutter run
+```
+> Select an Android emulator, iOS simulator, or connected physical device.
 
 ---
 
 ## 🔑 Default Credentials
 
-The application automatically seeds a default Super Administrator account when the database table is empty (`DataSeeder.java`):
+A default Super Administrator account is seeded automatically upon startup (`DataSeeder.java`):
 
-| Role | Username | Password | Notes |
+| Role | Username | Password | Creation Method |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `admin` | `admin123` | Pre-configured Super Admin account |
-| **Conductor** | Created by Admin | Set by Admin | Can be hired via Admin Dashboard |
-| **Passenger** | Self-registered | Self-registered | Can be created via `/register` |
+| **Admin** | `admin` | `admin123` | Auto-seeded by backend |
+| **Conductor** | Created by Admin | Set by Admin | Admin Dashboard $\rightarrow$ Conductor Management |
+| **Passenger** | Self-registered | Self-registered | User registration screen (`/register`) |
+
+---
+
+## 🗺️ Implementation Roadmap
+
+| Milestone | Scope | Key Deliverables |
+| :--- | :--- | :--- |
+| **Milestone 1: Core System** *(Completed)* | Web Portal & Booking API | Multi-role auth, 50-seat reservation engine, fleet management, and manifest viewing. |
+| **Milestone 2: Real-Time GPS Backend** | Telemetry Ingestion | `WebSocketConfig`, STOMP message broker, `BusLocationDTO`, in-memory cache, and mock route generator. |
+| **Milestone 3: Live Map on Web** | Web Mapping | `react-leaflet` integration, dynamic bus markers, route polyline overlay, and Conductor Web GPS broadcaster. |
+| **Milestone 4: Flutter Mobile Client** | Cross-Platform App | Passenger search/booking UI, Conductor manifest, device `geolocator` broadcast service, and mobile live tracking. |
+| **Milestone 5: Advanced Transit Features** | Geofencing & Alerts | Arrival notifications, dynamic delay estimates, and exportable trip audit reports. |
 
 ---
 
 ## 📄 Related Documentation
-- **[Detailed Project Functions Report](PROJECT_FUNCTIONS.md)**: Exhaustive catalog of system functions, business rules, and API specifications.
-- **[API Reference](doc/api-endpoints.md)**: Quick REST API endpoint list.
-- **[Project Architecture](doc/project-arc.md)**: High-level architectural notes.
-- **[Setup Guide](doc/setup.md)**: Setup and deployment notes.
+- **[Functional Specifications Catalog](PROJECT_FUNCTIONS.md)**: Comprehensive reference of business rules, constraints, and validation logic.
+- **[REST API Reference](doc/api-endpoints.md)**: Endpoint schemas and request/response payloads.
+- **[Architecture Guide](doc/project-arc.md)**: Deep dive into architectural decisions and tier boundaries.
+- **[Setup & Deployment Guide](doc/setup.md)**: Extended deployment notes and environment setups.
