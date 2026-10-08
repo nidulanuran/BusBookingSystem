@@ -32,59 +32,7 @@ The **Bus Booking & Fleet Tracking System** is designed to modernize public and 
 
 ---
 
-## 🏗️ Ecosystem Architecture
 
-The application adopts a decoupled, multi-client **Client-Server & Event-Driven Architecture**:
-
-```mermaid
-graph TD
-    subgraph Clients ["Client Layer (Web & Mobile)"]
-        subgraph Web_Client ["React 19 Web Portal"]
-            WebUI[React UI Components]
-            WebState[React State & Hooks]
-            WebMap[Leaflet / OpenStreetMap]
-            WebWS[STOMP WebSocket Client]
-            WebAxios[Axios REST Client]
-        end
-
-        subgraph Mobile_Client ["Flutter Cross-Platform Mobile App"]
-            FlutterUI[Flutter UI Widgets]
-            FlutterBloc[State Management - BLoC / Provider]
-            FlutterMap[Flutter Map / OSM]
-            FlutterGPS[Geolocator GPS Service]
-            FlutterWS[STOMP / WebSocket Channel]
-            FlutterDio[Dio / HTTP Client]
-        end
-    end
-
-    subgraph Backend_Tier ["Application Layer (Spring Boot 3.5.6)"]
-        RESTControllers[REST Controllers<br/>/api/buses, /api/bookings, etc.]
-        WSEndpoint[WebSocket & STOMP Broker<br/>/app/bus-location, /topic/bus/{id}]
-        Services[Business Logic Service Layer]
-        LocationCache[In-Memory Location Cache<br/>ConcurrentHashMap / Redis]
-        Validation[Jakarta Validation Engine]
-        Repos[Spring Data JPA Repositories]
-
-        RESTControllers --> Validation
-        Validation --> Services
-        Services --> Repos
-        WSEndpoint --> LocationCache
-        LocationCache -.-> Repos
-    end
-
-    subgraph Data_Tier ["Data Layer (PostgreSQL 12+)"]
-        DB[(PostgreSQL Database<br/>BusBookingSystemDB)]
-        Repos --> DB
-    end
-
-    WebAxios -- "HTTP REST (JSON)" --> RESTControllers
-    FlutterDio -- "HTTP REST (JSON)" --> RESTControllers
-    WebWS <-->|"STOMP over WebSocket (Pub/Sub)"| WSEndpoint
-    FlutterWS <-->|"STOMP over WebSocket (Pub/Sub)"| WSEndpoint
-    FlutterGPS -->|"Live Telemetry Pings"| FlutterWS
-```
-
----
 
 ## 🛠️ Technology Stack
 
